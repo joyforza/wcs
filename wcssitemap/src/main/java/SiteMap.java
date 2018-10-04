@@ -43,6 +43,7 @@ public class SiteMap {
     public void createMap() {
         Queue<String> queue = new LinkedList<String>();
         queue.add(rootDomain);
+        urlMap.put(rootDomain, 1);
 
         while (!queue.isEmpty()) {
             String curUrl = queue.peek();
@@ -54,13 +55,16 @@ public class SiteMap {
             List<String> newUrl = crawlURL(curUrl);
 
             for (String url : newUrl) {
+                url = url.trim();
                 if (url.charAt(0) == '/') url = rootDomain + url;
+
                 if (urlMap.containsKey(url)) {
-                    // exist
+                    //System.out.println("exist: " + url + " this: " + urlMap.get(url));
                 }
-                else
-                    if (url.contains(rootDomain))
-                        queue.add(url);
+                if (!urlMap.containsKey(url) && url.contains(rootDomain)) {
+                    queue.add(url);
+                    urlMap.put(url, 1);
+                }
             }
         }
     }
