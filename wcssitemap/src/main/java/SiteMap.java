@@ -5,15 +5,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class SiteMap {
-    private static HashMap<String, Integer> urlMap = new HashMap<String, Integer>();
-    private static String rootDomain = "";
+    private HashMap<String, Integer> urlMap = new HashMap<String, Integer>();
+    private String rootDomain = "";
 
-    public static List<String> crawlURL(String nodeURL) {
+
+    public SiteMap(String rootDomain) {
+        this.rootDomain = rootDomain;
+        urlMap.clear();
+    }
+
+    public List<String> crawlURL(String nodeURL) {
             List<String> newURL = new ArrayList<String>();
 
             try {
@@ -23,15 +27,11 @@ public class SiteMap {
 
                 for (Element e : aElements) {
                     String candidateUrl = e.attr("href");
-                    if (candidateUrl.charAt(0) == '/') {
+                    if (candidateUrl.length() > 0 && candidateUrl.charAt(0) == '/') {
                         candidateUrl = rootDomain + candidateUrl;
                     }
-
-                    if (urlMap.containsKey(candidateUrl)) {
-
-                    } else {
-
-                    }
+                    if (candidateUrl.length() > 0)
+                        newURL.add(candidateUrl);
                 }
             }
             catch (IOException ex) {
@@ -40,29 +40,29 @@ public class SiteMap {
             return newURL;
     }
 
-    public static String getRootDomain(String rootUrl) {
-        return  rootUrl;
-    }
+    public void createMap() {
+        Queue<String> queue = new LinkedList<String>();
+        queue.add(rootDomain);
 
-    public static void createMap(String rootUrl) {
-        rootDomain =  getRootDomain(rootUrl);
+        while (!queue.isEmpty()) {
+            String curUrl = queue.peek();
 
-        List<String> queueUrl = new ArrayList<String>();
+            System.out.println(curUrl);
 
+            queue.remove();
 
-        while (true) {
-            List<String> newUrls = crawlURL()
+            List<String> newUrl = crawlURL(curUrl);
+
+            for (String url : newUrl) {
+                if (url.charAt(0) == '/') url = rootDomain + url;
+                if (urlMap.containsKey(url)) {
+                    // exist
+                }
+                else
+                    if (url.contains(rootDomain))
+                        queue.add(url);
+            }
         }
     }
 
-
-    public static void main(String[] args) throws IOException {
-        Document doc = Jsoup.connect("https://zing.vn/songcungworldcup/tin-tuc").get();
-
-        Elements aElements = doc.getElementsByTag("a");
-
-        for (Element e : aElements) {
-            System.out.println(e.attr("href"));
-        }
-    }
 }

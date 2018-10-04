@@ -1,6 +1,7 @@
 public class Main {
     public static void main(String[] args) {
-        SiteMap siteMap = new SiteMap();
-
+        String url = "https://zing.vn";
+        SiteMap siteMap = new SiteMap(url);
+        siteMap.createMap();
     }
 }
