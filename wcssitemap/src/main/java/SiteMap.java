@@ -14,12 +14,59 @@ public class SiteMap {
 
     // graph
     private List<List<SiteLink>> graph = new ArrayList<List<SiteLink>>();
+    // inverse graph
+    private List<List<SiteLink>> invGraph = null;
+
     // vertices
     private int verticesNum;
     // type of node
     private List<Integer> typeNode = new ArrayList<Integer>();
 
+    // make inverse graph
+    public void makeInverseGraph() {
+        invGraph = new ArrayList<List<SiteLink>>();
+        int sz = graph.size();
+        for (int i = 0; i < sz; i++) invGraph.add(new ArrayList<SiteLink>());
 
+        for (int i = 0; i < graph.size(); i++) {
+
+            List<SiteLink> listSite = graph.get(i);
+            for (SiteLink siteLink : listSite) {
+
+                String src = siteLink.getSrcUrl();
+                String des = siteLink.getDesUrl();
+
+                // src --> des ( desType )
+                int desId = urlMap.get(des);
+                int srcId = urlMap.get(src);
+
+                int srcType = typeNode.get(srcId);
+
+                SiteLink invSiteLink = new SiteLink(des, src, srcType);
+                //invSiteLink.setSrcUrl(des);
+                //invSiteLink.setDesUrl(src);
+                //invSiteLink.setDesType(srcType);
+
+                invGraph.get(desId).add(invSiteLink);
+
+            }
+        }
+
+    }
+
+    public List<SiteLink> getReferenceLinks(String url) {
+        int id = urlMap.get(url);
+        return invGraph.get(id);
+    }
+
+    public void printReferenceLinks(String url) {
+        int id = urlMap.get(url);
+        for (SiteLink siteLink : invGraph.get(id)) {
+            System.out.println("link: " + siteLink.getDesUrl() + " type: " + siteLink.getDesType());
+        }
+    }
+
+    //
     public SiteMap(String rootDomain) {
         this.rootDomain = rootDomain;
         urlMap.clear();
@@ -52,6 +99,7 @@ public class SiteMap {
             return newURL;
     }
 
+    // list all page that url direct to
     public void getLinks(String url) {
         int mapId = urlMap.get(url);
         List<SiteLink> list = graph.get(mapId);
@@ -105,7 +153,7 @@ public class SiteMap {
                     }
                 }
                 else {
-                    //
+                    // old node
                     int mapCurUrl = urlMap.get(url);
                     int typeCurUrl = typeNode.get(mapCurUrl);
                     //
