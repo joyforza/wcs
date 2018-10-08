@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="800" height="1750" style="border:1px solid #d3d3d3;">
+    Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+
+    ctx.translate( 1200/2, 100/2);
+    ctx.rotate(Math.PI/2);
+
+    ctx.beginPath();
+    //ctx.moveTo(0, 0);
+    //ctx.lineTo(300, 150);
+    ctx.stroke();
+
+    //var map = new Array([1], [1, 1, 1], [1, 1, 0, 3]);
+    //var map = new Array([1], [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], [0,8,8,0,11,25,25,25,25,25,25,25,0,0,0,0,31,31,31,31,31,31,31,31,31,31,32,32,32,32,32,32,32], [0,0,0,4,4,6,7,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] );
+
+    /* block.vn */
+    var map = new Array(
+    [1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 8, 8, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 25, 25, 25, 25, 25, 25, 0, 0, 0, 0, 0, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 32, 32],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+
+
+    var boxW = 20;
+    var boxH = 100;
+
+    var halfBoxH = boxH / 2;
+    var halfBoxW = boxW / 2;
+
+    var nfloor = 4;
+
+    function buildTreeMap(floor, height, coord) {
+
+        var rect = new Array();
+
+        if (floor == nfloor - 1) {
+            var bgDir = 10;
+
+            //alert(map[floor].length);
+
+            for (var i = 0; i < map[floor].length; i++) {
+                if (map[floor][i] > 0)
+                {
+
+                    ctx.rect(bgDir, height, boxW, boxH);
+                    ctx.stroke();
+
+
+                }
+                rect.push(bgDir);
+                bgDir = bgDir + boxW + 10;
+            }
+
+
+        }
+        else {
+
+            for (var i = 0; i < map[floor].length; i++) {
+                if (map[floor][i] > 0) {
+                    ctx.rect(coord[i], height, boxW, boxH);
+                    ctx.stroke();
+                }
+                rect.push(coord[i]);
+            }
+        }
+
+
+        // draw linked lines
+        if (floor == 0) return;
+        var coord = new Array();
+        var bgSeg = 0;
+        height = height + boxH;
+
+        for (var i = 0; i < map[floor].length; i++) {
+            if (i == map[floor].length - 1 || map[floor][i] == 0 || (i < map[floor].length - 1 && map[floor][i] != map[floor][i + 1])) {
+
+                var endSeg = i;
+
+                if (map[floor][i] != 0) {
+               // if (true) {
+                    for (var j = bgSeg; j <= endSeg; j++) {
+                        ctx.moveTo(rect[j] + halfBoxW, height);
+                        ctx.lineTo(rect[j] + halfBoxW, height + 25);
+                    }
+
+                    /*ctx.moveTo(rect[bgSeg] + halfBoxW, height);
+                    ctx.lineTo(rect[bgSeg] + halfBoxW, height + 25);
+
+                    ctx.moveTo(rect[endSeg] + halfBoxW, height);
+                    ctx.lineTo(rect[endSeg] + halfBoxW, height + 25); */
+
+                    // line to begin to end
+
+                    ctx.moveTo(rect[bgSeg] + halfBoxW, height + 25);
+                    ctx.lineTo(rect[endSeg] + halfBoxW, height + 25);
+
+                    // to parent
+
+                    var mid = rect[bgSeg] + halfBoxW + (rect[endSeg] - rect[bgSeg]) / 2
+                    ctx.moveTo(mid, height + 25);
+                    ctx.lineTo(mid, height + 50);
+
+                    ctx.stroke();
+                }
+
+                coord.push(rect[bgSeg] + (rect[endSeg] - rect[bgSeg]) / 2);
+
+                //console.log("begin " + bgSeg);
+                //console.log("end " + endSeg);
+
+                bgSeg = i + 1;
+            }
+        }
+
+
+        buildTreeMap(floor - 1, height + 50, coord);
+    }
+
+    buildTreeMap(nfloor - 1, 10, []);
+
+
+
+</script>
+
+<body>
+
+</body>
+</html>
