@@ -22,6 +22,7 @@ public class SiteMap {
     // type of node
     private List<Integer> typeNode = new ArrayList<Integer>();
 
+
     // make inverse graph
     public void makeInverseGraph() {
         invGraph = new ArrayList<List<SiteLink>>();
@@ -118,7 +119,6 @@ public class SiteMap {
         verticesNum++;
         graph.add(new ArrayList<SiteLink>());
 
-
         while (!queue.isEmpty()) {
             String curUrl = queue.peek();
             int mapId = urlMap.get(curUrl);
@@ -137,6 +137,7 @@ public class SiteMap {
                     urlMap.put(url, verticesNum);
                     verticesNum++;
                     graph.add(new ArrayList<SiteLink>());
+
 
                     if (url.contains(rootDomain)) {
                         // internal
@@ -162,6 +163,122 @@ public class SiteMap {
                 }
             }
         }
+    }
+
+    // get decode of graph
+    public String getDecodeGraph() {
+
+        HashSet<Integer> hashSet = new HashSet<Integer>();
+        int root = 0;
+
+        ArrayList<Integer> degList = new ArrayList<Integer>();
+        degList.add(root);
+        hashSet.add(root);
+
+        List<List<Integer>> codeMap = new ArrayList<List<Integer>>();
+
+        codeMap.add(new ArrayList<Integer>(Arrays.asList(0)));
+
+        while (true) {
+
+            System.out.println("new pharse:");
+            ArrayList<Integer> newList = new ArrayList<Integer>();
+
+            int counting = 1;
+
+            List<Integer> addition = new ArrayList<Integer>();
+
+            for (int j = 0; j < degList.size(); j++) {
+                int node = degList.get(j);
+
+
+                for (int i = 0; i < graph.get(node).size(); i++) {
+                    SiteLink siteLink = graph.get(node).get(i);
+                    String toUrl = siteLink.getDesUrl();
+                    int toUrlId = urlMap.get(toUrl);
+
+                    if (!hashSet.contains(toUrlId)) {
+                        newList.add(toUrlId);
+                        addition.add(counting);
+                        hashSet.add(toUrlId);
+                    }
+                }
+                counting++;
+            }
+
+
+            if (newList.size() == 0) break;
+
+            degList.clear();
+
+            for (int j = 0; j < newList.size(); j++)
+                degList.add(newList.get(j));
+            newList.clear();
+
+            codeMap.add(addition);
+        }
+
+
+        /*1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                8, 8, 11, 25, 25, 25, 25, 25, 25, 25, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 32, 32,
+                4, 4, 6, 7, 8,
+        */
+
+        /*List<List<Integer>> codeMap = new ArrayList<List<Integer>>();
+        codeMap.add(new ArrayList<Integer>(Arrays.asList(1)));
+        codeMap.add(new ArrayList<Integer>(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)));
+        codeMap.add(new ArrayList<Integer>(Arrays.asList(8, 8, 11, 25, 25, 25, 25, 25, 25, 25, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 32, 32)));
+        codeMap.add(new ArrayList<Integer>(Arrays.asList(4, 4, 6, 7, 8)));
+
+        for (int i = 0; i < codeMap.size(); i++) {
+            for (int j = 0; j < codeMap.get(i).size(); j++)
+                System.out.print(codeMap.get(i).get(j) + ", ");
+            System.out.println();
+        } */
+
+        List<List<Integer> > genMap = new ArrayList<List<Integer>>();
+
+        genMap.add(new ArrayList<Integer>(Arrays.asList(1)));
+
+        for (int i = 1; i < codeMap.size(); i++) {
+
+            List<Integer> subGenMap = new ArrayList<Integer>();
+
+
+            int count = 0;
+            int pos = 0;
+
+            for (int j = 0; j < genMap.get(i - 1).size(); j++) {
+                if (genMap.get(i - 1).get(j) > 0) count++;
+
+                boolean isHave = false;
+                while (pos < codeMap.get(i).size() && codeMap.get(i).get(pos) == count) {
+                    subGenMap.add(codeMap.get(i).get(pos));
+                    pos++;
+                    isHave = true;
+                }
+
+                if (!isHave)
+                    subGenMap.add(0);
+
+            }
+
+            genMap.add(subGenMap);
+            /*System.out.println("done " + i);
+            for (int j = 0; j < subGenMap.size(); j++)
+                System.out.print(subGenMap.get(j) + " ");
+            System.out.println(); */
+        }
+
+        System.out.println("Finishing:");
+        for (int i = 0; i < genMap.size(); i++) {
+            System.out.print("[");
+            for (int j = 0; j < genMap.get(i).size(); j++)
+                System.out.print(genMap.get(i).get(j) + ", ");
+            System.out.println("], ");
+        }
+
+        return "";
     }
 
     public class SiteLink {
