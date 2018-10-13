@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.util.*;
 
 public class SiteMap {
+    // mapping 'url (String)' to an id (Int)
     private HashMap<String, Integer> urlMap = new HashMap<String, Integer>();
 
+    // root of website
     private String rootDomain = "";
 
     // graph
@@ -20,8 +22,13 @@ public class SiteMap {
     // vertices
     private int verticesNum;
     // type of node
+    // 1: internal link
+    // 2: external link
+    // 3: error (internal) link
     private List<Integer> typeNode = new ArrayList<Integer>();
 
+    // mapping 'node-number-id' to 'node-url'
+    private List<String> links = new ArrayList<String>();
 
     // make inverse graph
     public void makeInverseGraph() {
@@ -55,11 +62,13 @@ public class SiteMap {
 
     }
 
+    // get list all reference links
     public List<SiteLink> getReferenceLinks(String url) {
         int id = urlMap.get(url);
         return invGraph.get(id);
     }
 
+    // print all reference links
     public void printReferenceLinks(String url) {
         int id = urlMap.get(url);
         for (SiteLink siteLink : invGraph.get(id)) {
@@ -67,15 +76,18 @@ public class SiteMap {
         }
     }
 
-    //
+    // init site-map with 'root Domain' link
     public SiteMap(String rootDomain) {
         this.rootDomain = rootDomain;
         urlMap.clear();
         verticesNum = 0;
     }
 
+    // crawl information from specific 'nodeURL'
     public List<String> crawlURL(String nodeURL) {
-            //System.out.println("Tree begin at: " + nodeURL);
+
+            int nodeId = urlMap.get(nodeURL);
+
             List<String> newURL = new ArrayList<String>();
 
             try {
@@ -93,10 +105,11 @@ public class SiteMap {
                 }
             }
             catch (IOException ex) {
+                // page error:
+                typeNode.set(nodeId, 3);
                 System.out.println("URL ERROR! on access page: " + nodeURL);
             }
 
-            //System.out.println("found: " + newURL.size());
             return newURL;
     }
 
@@ -109,7 +122,7 @@ public class SiteMap {
         }
     }
 
-
+    // BFS to create graph
     public void createMap() {
         Queue<String> queue = new LinkedList<String>();
         queue.add(rootDomain);
@@ -118,6 +131,7 @@ public class SiteMap {
         typeNode.add(1);
         verticesNum++;
         graph.add(new ArrayList<SiteLink>());
+        links.add(rootDomain);
 
         while (!queue.isEmpty()) {
             String curUrl = queue.peek();
@@ -145,12 +159,14 @@ public class SiteMap {
                         graph.get(mapId).add(sl);
                         queue.add(url);
                         typeNode.add(1);
+                        links.add(url);
                     }
                     else {
                         // external
                         SiteLink sl = new SiteLink(curUrl, url, 2);
                         graph.get(mapId).add(sl);
                         typeNode.add(2);
+                        links.add(url);
                     }
                 }
                 else {
@@ -175,14 +191,20 @@ public class SiteMap {
         degList.add(root);
         hashSet.add(root);
 
+        // build a 'codeMap'
         List<List<Integer>> codeMap = new ArrayList<List<Integer>>();
 
+        // build a 'idMap'
+        List<List<Integer>> idMap = new ArrayList<List<Integer>>();
+
+        // initial
         codeMap.add(new ArrayList<Integer>(Arrays.asList(0)));
+        idMap.add(new ArrayList<Integer>(Arrays.asList(0)));
 
         while (true) {
 
-            System.out.println("new pharse:");
             ArrayList<Integer> newList = new ArrayList<Integer>();
+            ArrayList<Integer> subIdMap = new ArrayList<Integer>();
 
             int counting = 1;
 
@@ -201,6 +223,8 @@ public class SiteMap {
                         newList.add(toUrlId);
                         addition.add(counting);
                         hashSet.add(toUrlId);
+                        // addition: subIdList
+                        subIdMap.add(toUrlId);
                     }
                 }
                 counting++;
@@ -216,34 +240,26 @@ public class SiteMap {
             newList.clear();
 
             codeMap.add(addition);
+            idMap.add(subIdMap);
         }
 
+        // Initial 'typeMap', 'urlMap' (future)
+        List<List<Integer>> typeMap = new ArrayList<List<Integer>>();
+        List<List<String>> urlMap = new ArrayList<List<String>>();
 
-        /*1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                8, 8, 11, 25, 25, 25, 25, 25, 25, 25, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 32, 32,
-                4, 4, 6, 7, 8,
-        */
-
-        /*List<List<Integer>> codeMap = new ArrayList<List<Integer>>();
-        codeMap.add(new ArrayList<Integer>(Arrays.asList(1)));
-        codeMap.add(new ArrayList<Integer>(Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)));
-        codeMap.add(new ArrayList<Integer>(Arrays.asList(8, 8, 11, 25, 25, 25, 25, 25, 25, 25, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 32, 32)));
-        codeMap.add(new ArrayList<Integer>(Arrays.asList(4, 4, 6, 7, 8)));
-
-        for (int i = 0; i < codeMap.size(); i++) {
-            for (int j = 0; j < codeMap.get(i).size(); j++)
-                System.out.print(codeMap.get(i).get(j) + ", ");
-            System.out.println();
-        } */
-
+        // Convert: 'codeMap' to 'genMap' by adding '0'
         List<List<Integer> > genMap = new ArrayList<List<Integer>>();
-
         genMap.add(new ArrayList<Integer>(Arrays.asList(1)));
+        typeMap.add(new ArrayList<Integer>(Arrays.asList( typeNode.get(0))));
+        urlMap.add(new ArrayList<String>(Arrays.asList(rootDomain)));
 
         for (int i = 1; i < codeMap.size(); i++) {
 
             List<Integer> subGenMap = new ArrayList<Integer>();
 
+            List<Integer> subTypeMap = new ArrayList<Integer>();
+
+            List<String> subUrlMap = new ArrayList<String>();
 
             int count = 0;
             int pos = 0;
@@ -254,33 +270,77 @@ public class SiteMap {
                 boolean isHave = false;
                 while (pos < codeMap.get(i).size() && codeMap.get(i).get(pos) == count) {
                     subGenMap.add(codeMap.get(i).get(pos));
+                    subTypeMap.add( typeNode.get( idMap.get(i).get(pos) ) );
+                    subUrlMap.add( links.get( idMap.get(i).get(pos)) );
                     pos++;
                     isHave = true;
                 }
 
-                if (!isHave)
+                if (!isHave) {
                     subGenMap.add(0);
-
+                    subTypeMap.add(0);
+                    subUrlMap.add("");
+                }
             }
-
             genMap.add(subGenMap);
-            /*System.out.println("done " + i);
-            for (int j = 0; j < subGenMap.size(); j++)
-                System.out.print(subGenMap.get(j) + " ");
-            System.out.println(); */
+            typeMap.add(subTypeMap);
+            urlMap.add(subUrlMap);
         }
+
+        // Generate structure code
+        String codeGraph = "";
 
         System.out.println("Finishing:");
         for (int i = 0; i < genMap.size(); i++) {
-            System.out.print("[");
-            for (int j = 0; j < genMap.get(i).size(); j++)
-                System.out.print(genMap.get(i).get(j) + ", ");
-            System.out.println("], ");
+            String subCode = "[";
+            for (int j = 0; j < genMap.get(i).size(); j++) {
+                subCode = subCode + genMap.get(i).get(j);
+                if (j < genMap.get(i).size() - 1) subCode = subCode + ", ";
+            }
+            subCode = subCode + "]";
+            if (i < genMap.size() - 1) subCode = subCode + ", ";
+            codeGraph = codeGraph + subCode;
         }
 
+        // code of graph
+        System.out.println(codeGraph);
+        String typeCodeGraph = "";
+
+        // Generate structure of 'type'
+        for (int i = 0; i < typeMap.size(); i++) {
+            String subCode = "[";
+            for (int j = 0; j < typeMap.get(i).size(); j++) {
+                subCode = subCode + typeMap.get(i).get(j);
+                if (j < typeMap.get(i).size() - 1) subCode = subCode + ", ";
+            }
+            subCode = subCode + "]";
+            if (i < typeMap.size() - 1) subCode= subCode + ", ";
+            typeCodeGraph = typeCodeGraph + subCode;
+        }
+
+        System.out.println(typeCodeGraph);
+
+        // Generate structure of 'url'
+
+        String urlCodeGraph = "";
+
+        // Generate structure of 'type'
+        for (int i = 0; i < urlMap.size(); i++) {
+            String subCode = "[";
+            for (int j = 0; j < urlMap.get(i).size(); j++) {
+                subCode = subCode + "\'" + urlMap.get(i).get(j) + "\'" ;
+                if (j < urlMap.get(i).size() - 1) subCode = subCode + ", ";
+            }
+            subCode = subCode + "]";
+            if (i < urlMap.size() - 1) subCode= subCode + ", ";
+            urlCodeGraph = urlCodeGraph + subCode;
+        }
+
+        System.out.println(urlCodeGraph);
         return "";
     }
 
+    // class 'Site-Link'
     public class SiteLink {
         private String srcUrl;
         private String desUrl;
